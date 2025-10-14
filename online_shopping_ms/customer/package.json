@@ -1,15 +1,17 @@
 {
-  "name": "shopping_app_monolithic",
+  "name": "customer",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon src/index.js",
-    "start": "nodemon src/index.js"
+    "start": "cross-env NODE_ENV=prod nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
