@@ -1,11 +1,6 @@
-const {
-  CustomerModel,
-  ProductModel,
-  OrderModel,
-  CartModel,
-} = require("../models");
+const { OrderModel, CartModel } = require("../models");
 const { v4: uuidv4 } = require("uuid");
-const { APIError, BadRequestError } = require("../../utils/app-errors");
+const { APIError } = require("../../utils/app-errors");
 
 //Dealing with data base operations
 class ShoppingRepository {
@@ -26,26 +21,21 @@ class ShoppingRepository {
 
   async Cart(customerId) {
     try {
-      const cartItems = await CartModel.find({ customerId });
+      const cartItems = await CartModel.findOne({ customerId });
       if (cartItems) {
         return cartItems;
       }
       throw new Error("Data not found");
     } catch (err) {
-      throw APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Find Cart"
-      );
+      throw err;
     }
   }
 
   async AddCartItem(customerId, item, qty, isRemove) {
     try {
-      const cart = await CartModel.findOne(customerId);
+      const cart = await CartModel.findOne({ customerId: customerId });
 
       const { _id } = item;
-
       if (cart) {
         let cartItems = cart.items;
         let isExist = false;
@@ -61,34 +51,22 @@ class ShoppingRepository {
               isExist = true;
             }
           });
-
-          if (!isExist && !isRemove) {
-            cartItems.push({ product: [...item], unit: qty });
-          }
-
-          cart.items = cartItems;
-          return await cart.save();
-        } else {
-          return CartModel.create({
-            customerId,
-            items: [{ product: { ...item }, unit: qty }],
-          });
         }
 
-        profile.cart = cartItems;
+        if (!isExist && !isRemove) {
+          cartItems.push({ product: {...item}, unit: qty });
+        }
 
-        const cartSaveResult = await profile.save();
-
-        return cartSaveResult;
+        cart.items = cartItems;
+        return await cart.save();
+      } else {
+        return CartModel.create({
+          customerId: customerId,
+          items: [{ product: { ...item }, unit: qty }],
+        });
       }
-
-      throw new Error("Unable to add to cart!");
     } catch (err) {
-      throw new APIError(
-        "API Error",
-        STATUS_CODES.INTERNAL_ERROR,
-        "Unable to Create Customer"
-      );
+      throw new APIError("API Error: ", err, " .Unable to Create Customer");
     }
   }
 
@@ -96,14 +74,12 @@ class ShoppingRepository {
     //check transaction for payment Status
 
     try {
-      const profile = await CustomerModel.findById(customerId).populate(
-        "cart.product"
-      );
+      const cart = await CartModel.findOne({ customerId: customerId });
 
-      if (profile) {
+      if (cart) {
         let amount = 0;
 
-        let cartItems = profile.cart;
+        let cartItems = cart.items;
 
         if (cartItems.length > 0) {
           //process Order
@@ -122,14 +98,11 @@ class ShoppingRepository {
             items: cartItems,
           });
 
-          profile.cart = [];
+          cart.items = [];
 
-          order.populate("items.product").execPopulate();
           const orderResult = await order.save();
 
-          profile.orders.push(orderResult);
-
-          await profile.save();
+          await cart.save();
 
           return orderResult;
         }

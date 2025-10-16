@@ -28,6 +28,60 @@ class ShoppingService {
       throw new APIError("Data Not found", err);
     }
   }
+
+  
+  async GetCart(customerId) {
+    try {
+      const cartItems = await this.repository.Cart(customerId);
+      return FormateData(cartItems);
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async ManageCart(customerId, item, qty, isRemove) {
+    try {
+      const cartResult = await this.repository.AddCartItem(
+        customerId,
+        item,
+        qty,
+        isRemove
+      );
+      return FormateData(cartResult);
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async SubscribeEvents(payload) {
+    payload = JSON.parse(payload);
+    const { event, data } = payload;
+
+    const { userId, product, qty } = data;
+
+    switch (event) {
+      case "ADD_TO_CART":
+        this.ManageCart(userId, product, qty, false);
+        break;
+      case "REMOVE_FROM_CART":
+        this.ManageCart(userId, product, qty, true);
+        break;
+      default:
+        break;
+    }
+  }
+
+  async GetOrderPayload(userId, order, event) {
+    if (order) {
+      const payload = {
+        event: event,
+        data: { userId, order },
+      };
+      return FormateData(payload);
+    } else {
+      return FormateData({ error: "No order is available!" });
+    }
+  }
 }
 
 module.exports = ShoppingService;

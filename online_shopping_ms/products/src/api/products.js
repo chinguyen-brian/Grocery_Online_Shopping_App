@@ -1,11 +1,11 @@
 const ProductService = require("../services/product-service");
+const { PublishMessage } = require("../utils");
 const UserAuth = require("./middlewares/auth");
 const {
-  PublishCustomerEvent,
-  PublishShoppingEvent,
-} = require("../utils/index");
-
-module.exports = (app) => {
+  CUSTOMER_BINDING_KEY,
+  SHOPPING_BINDING_KEY,
+} = require("../config/index");
+module.exports = (app, channel) => {
   const service = new ProductService();
 
   app.post("/product/create", async (req, res, next) => {
@@ -72,7 +72,8 @@ module.exports = (app) => {
     );
 
     try {
-      PublishCustomerEvent(data);
+      // PublishCustomerEvent(data);
+      PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
 
       return res.status(200).json(data.data.product);
     } catch (err) {}
@@ -88,7 +89,9 @@ module.exports = (app) => {
         { productId },
         "REMOVE_FROM_WISHLIST"
       );
-      PublishCustomerEvent(data);
+      PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+      // PublishCustomerEvent(data);
+
       return res.status(200).json(data.data.product);
     } catch (err) {
       next(err);
@@ -104,9 +107,10 @@ module.exports = (app) => {
         { productId: req.body._id, qty: req.body.qty },
         "ADD_TO_CART"
       );
-
-      PublishCustomerEvent(data);
-      PublishShoppingEvent(data);
+      PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+      PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+      // PublishCustomerEvent(data);
+      // PublishShoppingEvent(data);
 
       const response = {
         product: data.data.product,
@@ -129,9 +133,10 @@ module.exports = (app) => {
         { productId: productId },
         "REMOVE_FROM_CART"
       );
-
-      PublishCustomerEvent(data);
-      PublishShoppingEvent(data);
+      PublishMessage(channel, CUSTOMER_BINDING_KEY, JSON.stringify(data));
+      PublishMessage(channel, SHOPPING_BINDING_KEY, JSON.stringify(data));
+      // PublishCustomerEvent(data);
+      // PublishShoppingEvent(data);
       const response = {
         product: data.data.product,
         unit: data.data.qty,
