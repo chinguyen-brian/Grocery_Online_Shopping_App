@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const amqplib = require("amqplib");
 const { APP_SECRET, MESSAGE_BROKER_URL, QUEUE_NAME, CUSTOMER_BINDING_KEY, EXCHANGE_NAME } = require("../config");
@@ -58,6 +58,7 @@ module.exports.CreateChannel = async () => {
     const connection = await amqplib.connect(MESSAGE_BROKER_URL);
     const channel = await connection.createChannel();
     await channel.assertExchange(EXCHANGE_NAME, "direct", false);
+    console.log("Connected to RabbitMQ");
     return channel;
   } catch (err) {
     throw err;

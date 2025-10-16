@@ -1,0 +1,75 @@
+services:
+  mongo:
+    image: mongo:8
+    container_name: mongo-onl-shop
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq-onl-shop
+    ports:
+      - "5672:5672"
+      - "15672:15672"    
+
+  products:
+    build: "./products"
+    container_name: products
+    ports:
+      - "8002:8002"
+    restart: always
+    env_file:
+      - "./products/.env"
+    depends_on:
+      - mongo
+      - rabbitmq
+    volumes:
+      - .:/app
+      - /app/products/node_modules
+    command: ["npm", "start"]
+
+  customer:
+    build: "./customer"
+    container_name: customer
+    ports:
+      - "8001:8001"
+    restart: always
+    env_file:
+      - "./customer/.env"
+    depends_on:
+      - mongo
+      - rabbitmq
+    volumes:
+      - .:/app
+      - /app/customer/node_modules
+    command: ["npm", "start"]
+
+  shopping:
+    build: "./shopping"
+    container_name: shopping
+    ports:
+      - "8003:8003"
+    restart: always
+    env_file:
+      - "./shopping/.env"
+    depends_on:
+      - mongo
+      - rabbitmq
+    volumes:
+      - .:/app
+      - /app/shopping/node_modules
+    working_dir: /app/shopping
+    command: ["npm", "start"]
+  
+  nginx-proxy:
+    build: './proxy'
+    depends_on:
+      - products
+      - shopping
+      - customer
+    ports:
+      - "80:80"
+volumes:
+  mongo_data:

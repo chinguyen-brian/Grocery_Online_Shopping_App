@@ -1,8 +1,14 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const amqplib = require("amqplib");
 
-const { APP_SECRET, EXCHANGE_NAME, QUEUE_NAME, MESSAGE_BROKER_URL, SHOPPING_BINDING_KEY } = require("../config");
+const {
+  APP_SECRET,
+  EXCHANGE_NAME,
+  QUEUE_NAME,
+  MESSAGE_BROKER_URL,
+  SHOPPING_BINDING_KEY,
+} = require("../config");
 
 //Utility functions
 module.exports.GenerateSalt = async () => {
@@ -57,6 +63,7 @@ module.exports.CreateChannel = async () => {
     const connection = await amqplib.connect(MESSAGE_BROKER_URL);
     const channel = await connection.createChannel();
     await channel.assertExchange(EXCHANGE_NAME, "direct", false);
+    console.log("Connected to RabbitMQ");
     return channel;
   } catch (err) {
     throw err;
@@ -82,7 +89,7 @@ module.exports.SubscribeMessage = async (channel, service) => {
     channel.consume(appQueue.queue, (data) => {
       console.log("Received Data");
       console.log(data.content.toString());
-      service.SubscribeEvents(data.content.toString())
+      service.SubscribeEvents(data.content.toString());
       channel.ack(data);
     });
   } catch (err) {
