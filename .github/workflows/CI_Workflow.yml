@@ -21,6 +21,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: |
+          online_shopping_ms/customer/package-lock.json
+          online_shopping_ms/products/package-lock.json
+          online_shopping_ms/shopping/package-lock.json
+          
     - name: Test Customer Service
       working-directory: ./online_shopping_ms/customer
       run: |
