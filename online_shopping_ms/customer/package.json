@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=dev nodemon src/index.js",
     "start": "cross-env NODE_ENV=prod nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
     "nodemon": "^2.0.12"
   }
 }
